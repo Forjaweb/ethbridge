@@ -1,5 +1,5 @@
 {
-    "name" : "Forjaweb/EthbridgeBundle",
+    "name" : "forjaweb/ethbridgebundle",
     "description" : "Communicate to a Eth node, using IPC or RPC.",
     "type" : "symfony-bundle",
     "authors" : [{
