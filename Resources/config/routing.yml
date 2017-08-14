@@ -1,0 +1,3 @@
+forjaweb_ethbridge_homepage:
+    path:     /
+    defaults: { _controller: ForjawebEthbridgeBundle:Default:index }

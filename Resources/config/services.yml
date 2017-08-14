@@ -1,0 +1,4 @@
+services:
+#    forjaweb_ethbridge.example:
+#        class: Forjaweb\EthbridgeBundle\Example
+#        arguments: ["@service_id", "plain_value", "%parameter%"]
