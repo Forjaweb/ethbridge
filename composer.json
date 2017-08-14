@@ -1,0 +1,30 @@
+{
+    "name" : "Forjaweb/EthbridgeBundle",
+    "description" : "Communicate to a Eth node, using IPC or RPC.",
+    "type" : "symfony-bundle",
+    "authors" : [{
+        "name" : "Forjaweb",
+        "email" : "info@forjaweb.com"
+    }],
+    "keywords" : [
+        "Ethereum Symfony"
+    ],
+    "license" : [
+        "MIT"
+    ],
+    "require" : {
+    },
+    "autoload" : {
+        "psr-0" : {
+            "Forjaweb\\EthbridgeBundle" : ""
+        }
+    },
+    "target-dir" : "Ethereum/EthbridgeBundle",
+    "repositories" : [{
+    }],
+    "extra" : {
+    "branch-alias" : {
+            "dev-master" : "0.0.1-dev"
+        }
+    }
+}
