@@ -19,7 +19,7 @@
             "Forjaweb\\EthbridgeBundle" : ""
         }
     },
-    "target-dir" : "Ethereum/EthbridgeBundle",
+    "target-dir" : "Forjaweb/EthbridgeBundle",
     "repositories" : [{
     }],
     "extra" : {
