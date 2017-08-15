@@ -1,4 +1,9 @@
 services:
-#    forjaweb_ethbridge.example:
-#        class: Forjaweb\EthbridgeBundle\Example
-#        arguments: ["@service_id", "plain_value", "%parameter%"]
+    fw.wallet:
+        class: Forjaweb\EthbridgeBundle\Controller\WalletController
+        calls:
+            - [setContainer, ["@service_container"]]
+    fw.eth:
+        class: Forjaweb\EthbridgeBundle\Controller\ServiceController
+        calls:
+            - [setContainer, ["@service_container"]]
