@@ -48,23 +48,62 @@ class WalletController extends ServiceBaseController
 		if(!isset($data->error)) {
 			switch($format) {
 				case 'wei':
-					$data = $this->toWei($data->result);
+					$data->result = (int)$this->hexToWei($data->result);
 				break;
 				case 'eth':
-					$data = $this->toEth($data->result);
+					$data->result = (float)$this->hexToEth($data->result);
 				break;
 			}
 		}
+		//print_r($data);
 		return $data;
 	}
 	
 	// Convert HEX to WEI
-	public function toWei($q) {
+	public function hexToWei($q) {
 		return $this->get('fw.eth')->decode_hex($q);
 	}
 	
 	// Convert HEX to ETH
-	public function toEth($q) {
+	public function hexToEth($q) {
 		return $this->get('fw.eth')->decode_hex($q) / 10000000000000000000;
+	}
+	
+	// Convert HEX to WEI
+	public function weiToHex($q) {
+		return '0x' . dechex($q);
+	}
+	
+	// Send a transaction from wallet to wallet
+	// Value is used in WEI
+	public function sendTransaction($from, $to, $value, $pass, $gas = 90000, $gasPrice = 1, $data = '') {
+		
+		$ret = $this->request->request('personal_unlockAccount', [$from, $pass]);
+		
+		$params = array(array(
+		  "from" => $from,
+		  "to" => $to,
+		  "value" => $this->weiToHex($value), 
+		  "gas" => $this->weiToHex($gas), 
+		  "gasPrice" => $this->weiToHex($gasPrice), 
+		  "data" => $data
+		));
+		
+		//print_r($params);
+		
+		$data = $this->request->request('eth_sendTransaction', $params);
+		
+		return $data;
+	}
+	
+	
+	public function getReceipt($receipt) {
+		$ret = $this->request->request('eth_getTransactionReceipt', [$receipt]);
+		return $ret;
+	}
+	
+	public function getTransaction($hash) {
+		$ret = $this->request->request('eth_getTransactionByHash', [$hash]);
+		return $ret;
 	}
 }

@@ -12,16 +12,28 @@ class ServiceController extends Controller
 		return $this->container->get('fw.wallet')->createWallet($pass);
     }
     
-    public function checkWalletBalance($wallet) {
-		return $this->container->get('fw.wallet')->checkWalletBalance($wallet);
+    public function checkWalletBalance($wallet, $format = null) {
+		return $this->container->get('fw.wallet')->checkWalletBalance($wallet, $format);
 	}
 	
-	public function toWei($q) {
-		return $this->container->get('fw.wallet')->toWei($q);
+	public function hexToWei($q) {
+		return $this->container->get('fw.wallet')->hexToWei($q);
 	}
 	
-	public function toEth($q) {
-		return $this->container->get('fw.wallet')->toEth($q);
+	public function hexToEth($q) {
+		return $this->container->get('fw.wallet')->hexToEth($q);
+	}
+	
+	public function sendTransaction($from, $to, $value, $pass, $gas = 90000, $gasPrice = 1, $data = '') {
+		return $this->container->get('fw.wallet')->sendTransaction($from, $to, $value, $pass, $gas, $gasPrice, $data);
+	}
+	
+	public function getReceipt($receipt) {
+		return $this->container->get('fw.wallet')->getReceipt($receipt);
+	}
+	
+	public function getTransaction($hash) {
+		return $this->container->get('fw.wallet')->getTransaction($hash);
 	}
 	
 	// Convert ETH 0x.. format to plain HEX
