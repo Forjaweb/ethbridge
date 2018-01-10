@@ -26,7 +26,7 @@ class ERC20Controller extends ServiceBaseController
 		}
 
 		// Params
-		$c = new stdClass();
+		$c = new \stdClass();
 		$c->from = '0x7ee760b17ce5cd95b9752f261bfb9b91c2babdba';
 		$c->to   = $this->sc_address;
 		$c->data = '0x70a08231000000000000000000000000' . $address;
