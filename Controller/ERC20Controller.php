@@ -11,7 +11,7 @@ class ERC20Controller extends ServiceBaseController
 	// Smart contract address for the token
 	private $sc_address = '';
 	
-	public function __construct($address) {
+	public function contract($address) {
 		$this->sc_address = $address;
 		return $this;
 	}
