@@ -7,3 +7,7 @@ services:
         class: Forjaweb\EthbridgeBundle\Controller\ServiceController
         calls:
             - [setContainer, ["@service_container"]]
+    fw.erc20:
+        class: Forjaweb\EthbridgeBundle\Controller\ERC20Controller
+        calls:
+            - [setContainer, ["@service_container"]]
