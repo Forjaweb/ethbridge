@@ -66,7 +66,7 @@ class WalletController extends ServiceBaseController
 	
 	// Convert HEX to ETH
 	public function hexToEth($q) {
-		return $this->get('fw.eth')->decode_hex($q) / 10000000000000000000;
+		return $this->get('fw.eth')->decode_hex($q) / 1000000000000000000;
 	}
 	
 	// Convert HEX to WEI
