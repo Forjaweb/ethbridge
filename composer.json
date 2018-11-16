@@ -14,7 +14,7 @@
     ],
     "require" : {
         "ircmaxell/random-lib": "^1.2",
-	"greensea/keccak": "master"
+	"greensea/keccak": "dev-master"
     },
     "autoload" : {
         "psr-0" : {
