@@ -3,11 +3,25 @@ services:
         class: Forjaweb\EthbridgeBundle\Controller\WalletController
         calls:
             - [setContainer, ["@service_container"]]
+    fw.contract:
+        class: Forjaweb\EthbridgeBundle\Controller\ContractController
+        calls:
+            - [setContainer, ["@service_container"]]
     fw.eth:
         class: Forjaweb\EthbridgeBundle\Controller\ServiceController
         calls:
             - [setContainer, ["@service_container"]]
+        arguments:
+            $wallet: '@fw.wallet'
+            $contract: '@fw.contract'
     fw.erc20:
         class: Forjaweb\EthbridgeBundle\Controller\ERC20Controller
         calls:
             - [setContainer, ["@service_container"]]
+    
+    Forjaweb\EthbridgeBundle\Controller\ServiceController:
+        arguments:
+            $wallet: '@fw.wallet'
+            $contract: '@fw.contract'
+
+    

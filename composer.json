@@ -13,7 +13,8 @@
         "MIT"
     ],
     "require" : {
-        "ircmaxell/random-lib": "^1.2"
+        "ircmaxell/random-lib": "^1.2",
+	"greensea/keccak ": "master"
     },
     "autoload" : {
         "psr-0" : {

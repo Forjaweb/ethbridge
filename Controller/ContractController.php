@@ -22,6 +22,13 @@ class ContractController extends ServiceBaseController
     // Contract functions helper
     private $func = array();
     
+    // Contract constructor helper
+    private $constructor = array();
+    
+    private $address = '';
+    
+    private $pass    = '';
+    
     
     private $sizeof = array(
         'uint8'   => 1,
@@ -81,6 +88,14 @@ class ContractController extends ServiceBaseController
         return $this;
     }
     
+    public function setAddress($address) {
+      $this->address = $address;
+    }
+    
+    public function setPass($pass) {
+      $this->pass = $pass;
+    }
+    
     public function setAbi($abi) {
         // Convert from JSON
         if(gettype($abi) === 'string')
@@ -91,36 +106,89 @@ class ContractController extends ServiceBaseController
         // 2 Some internal structures for 'easy' access
         foreach($abi as $func) {
             // Full name of the function, without parameter names
-            $full = $func->name . '(';
-            foreach($func->inputs as $input) {
-                $this->_sanitizeInput($input);
-                $full .= $input->type . ',';
+            if(isset($func->name)) {
+              $full = $func->name . '(';
+              
+              foreach($func->inputs as $input) {
+                  $this->_sanitizeInput($input);
+                  $full .= $input->type . ',';
+              }
+              $full = substr($full, 0, strlen($full)-1);
+              $full .= ')';
+              
+              // Hash table using func name as key
+              // Pre generated function bytes for contract call
+              $this->func[$func->name]['k256'] = '0x' . substr(\kornrunner\Keccak::hash($full, 256), 0, 8);
+              
+              // Rest of function information in Obj format
+              $this->func[$func->name]['obj']  = $func;
             }
-            $full = substr($full, 0, strlen($full)-1);
-            $full .= ')';
-            
-            // Hash table using func name as key
-            // Pre generated function bytes for contract call
-            $this->func[$func->name]['k256'] = '0x' . substr(\kornrunner\Keccak::hash($full, 256), 0, 8);
-            
-            // Rest of function information in Obj format
-            $this->func[$func->name]['obj']  = $func;
         }
+        
+        // Process Constructor parameters
+        $this->_processConstructor($abi);
         
         // Save the ABI
         $this->abi = $abi;
         return $this;
+    }
+    
+    private function _processConstructor($abi) {
+        // Convert from JSON
+        if(gettype($abi) === 'string')
+            $abi = json_decode($abi);
+    
+        // Prepare ABi //
+        // 1 Get each function codification
+        // 2 Some internal structures for 'easy' access
+        foreach($abi as $func) {
+            // Full name of the function, without parameter names
+            if(!isset($func->name) && $func->type === 'constructor') {
+                $full = '(';
+                
+                foreach($func->inputs as $input) {
+                  $this->_sanitizeInput($input);
+                  $full .= $input->type . ',';
+                }
+                
+                // Hash table using func name as key
+                // Pre generated function bytes for contract call
+                $this->constructor['k256'] = '';
+                
+                // Rest of function information in Obj format
+                $this->constructor['obj']  = $func;
+              }
+        }
+    }
+    
+    public function deployContract($data, $abi, $args = []) {
+      $this->setAbi($abi);
+      $constructor = $this->func('', $args, true, true);
+      $this->data = $data . $constructor;
+      $this->sc_address = null;
+      
+      return $this->txNode();
+    }
+    
+    public function checkReceipt($receipt) {
+      return $data = $this->request->request('eth_getTransactionReceipt', [$receipt]);
     }
      
     /** 
      * Calls a function
      * You must set the ABI before calling this function
      **/
-    public function func($func, $args = [])
+    public function func($func, $args = [], $return = false, $construct = false)
     {
-        // Start with first 4 bytes of keccak-256 codification of function name and parameters
-        $data = $this->func[$func]['k256'];
-        $obj  = $this->func[$func]['obj'];
+        // Are we calling constructor ?
+        if($construct) {
+          $data = $this->constructor['k256'];
+          $obj  = $this->constructor['obj'];
+        } else {
+          // Start with first 4 bytes of keccak-256 codification of function name and parameters
+          $data = $this->func[$func]['k256'];
+          $obj  = $this->func[$func]['obj'];
+        }
         
         // TODO: maybe return an error object instead?
         // Check if number of params is right
@@ -137,6 +205,8 @@ class ContractController extends ServiceBaseController
         // Lets call the smart contract
         // The 'constant' parameter tells us if we can call the node or we need to make a full 
         // transaction to the network
+        if($return) return $this->data;
+        else
         if($obj->constant)
             return $this->callNode();
         else
@@ -148,17 +218,20 @@ class ContractController extends ServiceBaseController
      * This function will call a node internally, without creating
      * a transaction in the Ethereum node
      * */
-    public function callNode()
+    public function callNode($params = null)
     {
-        // Params
-        $c = new \stdClass();
-        
-        // Address to send, data and value
-        $c->to   = $this->sc_address;
-        $c->data = $this->data;
-        $c->value = '0x0';
-                
-        $params = [$c, "latest"];
+      
+        if($params === null) {
+          // Params
+          $c = new \stdClass();
+          
+          // Address to send, data and value
+          $c->to   = $this->sc_address;
+          $c->data = $this->data;
+          $c->value = '0x0';
+                  
+          $params = [$c, "latest"];
+        }
         
         // Perform request (request->request->... ugly!)
         $data = $this->request->request('eth_call', $params);
@@ -175,15 +248,28 @@ class ContractController extends ServiceBaseController
         // Params
         $c = new \stdClass();
         
-        // TODO: change From address...
-        $c->from = '0xAeE0050f244fCc1Ef2F87586d2Ab8f4D053E35AD';
-        $c->to   = $this->sc_address;
-        $c->data = $this->data;
+        $c->from  = $this->address;
+        $c->to    = $this->sc_address;
+        $c->data  = $this->data;
         $c->value = '0x0';
-                
+        
+        
+        $gasPrice = $this->request->request('eth_gasPrice', new \stdClass());
+        
+        $gasEstimation = $this->request->request('eth_estimateGas', [$c]);
+         // print_r([$c]);
+         // print_r($gasEstimation);//exit;
+        
+        //print_r($this->decode_hex($gasEstimation->result));exit;
+        
+        $c->gas   = $gasEstimation->result; //'0x' . dechex(21000 * 68 * strlen($c->data) / 2);
+        
         $params = [$c];
         
+        print_r($params);exit;
+        
         // Perform request (request->request->... ugly!)
+        //$ret = $this->request->request('personal_unlockAccount', [$this->address, $this->pass]);
         $data = $this->request->request('eth_sendTransaction', $params);
 
         return $data;
@@ -302,7 +388,7 @@ class ContractController extends ServiceBaseController
         $c    = count($this->args);
         
         // First, add the size of the header from current position
-        $salt = ($c - $pos + 1) * 32;
+        $salt = ($c - $pos) * 32;
         
         // Then add the size of each argument prior to this one
         for($i = 0; $i < $pos - 1; $i++) {
@@ -351,6 +437,9 @@ class ContractController extends ServiceBaseController
             $ret['content'] = str_pad($content, 64, '0', STR_PAD_LEFT);
         }
         
+        // Size can't be odd ?
+        // if($size % 2 !== 0) { $size++; }
+        
         // Return data
         $ret['size'] = $size;
         $ret['type'] = $type;
@@ -390,5 +479,18 @@ class ContractController extends ServiceBaseController
                 $input->type = 'uint256[]';
             break;
         }
+    }
+    
+    private function decode_hex($input)
+    {
+      // Remove the 0x
+      if(substr($input, 0, 2) == '0x')
+        $input = substr($input, 2);
+      
+      // Check hex format
+      if(preg_match('/[a-f0-9]+/', $input))
+        return hexdec($input);
+        
+      return $input;
     }
 }
