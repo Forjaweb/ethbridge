@@ -266,8 +266,6 @@ class ContractController extends ServiceBaseController
         
         $params = [$c];
         
-        print_r($params);exit;
-        
         // Perform request (request->request->... ugly!)
         //$ret = $this->request->request('personal_unlockAccount', [$this->address, $this->pass]);
         $data = $this->request->request('eth_sendTransaction', $params);
